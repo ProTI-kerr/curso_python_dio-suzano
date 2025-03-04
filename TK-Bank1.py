@@ -18,7 +18,7 @@ ainda_tem = LIMITE_SAQUES_FREE  # Número de saques gratuitos restantes
 taxa_saque_extra = 6.5  # Taxa para saques extras
 
 while True:
-    print(f"\nSaldo atual: R$ {saldo:.2f}")
+  
     print(f"Saques gratuitos restantes: {ainda_tem}")
     
     opcao = input(menu).strip().lower()
