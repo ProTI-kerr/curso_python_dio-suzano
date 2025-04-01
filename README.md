@@ -17,3 +17,6 @@ Curso completo visando entrar no mercado DEV na área de Python\
   - Declaração que quantos saques ainda possui
   - Possibilidade de saques extras determinado, adicionando um debito amais por saque
   
+-------------------
+Baseado no arquivo previo "desafio_v2" do professor Guilherme, fiz algumas modificações gerando o arquivo "desafio_v2-vTK", onde 
+adicionei novas funcionalidades. Mas mesmo buscando ajuda externa não consegui ate o momento corrigir alguns problemas de banco de dados.
