@@ -111,41 +111,55 @@ class Conta:
         return True
 
 
-class ContaCorrente(Conta):
-    def __init__(self, numero, cliente, limite=500, limite_saques=3):
+class ContaCorrente(Conta):#acrescentei "limite_transacoes" maior,porém com acrescimo de 6,5/transação
+    def __init__(self, numero, cliente, limite=500, limite_saques=3, limite_transacoes=10, taxa_transacao=6.5):
         super().__init__(numero, cliente)
         self._limite = limite
         self._limite_saques = limite_saques
+        self._limite_transacoes = limite_transacoes
+        self._taxa_transacao = taxa_transacao
 
     @classmethod
-    def nova_conta(cls, cliente, numero, limite, limite_saques):
+    def nova_conta(cls, cliente, numero, limite=500, limite_saques=3):
         return cls(numero, cliente, limite, limite_saques)
 
-    def sacar(self, valor):
-        numero_saques = len(
-            [
-                transacao
-                for transacao in self.historico.transacoes
-                if transacao["tipo"] == Saque.__name__
-            ]
+    def _contar_transacoes(self):
+        return len(
+            [t for t in self.historico.transacoes if t["tipo"] in ("Saque", "Transferência")]
         )
 
-        excedeu_limite = valor > self._limite
-        excedeu_saques = numero_saques >= self._limite_saques
+    def sacar(self, valor):
+        numero_saques = len([t for t in self.historico.transacoes if t["tipo"] == "Saque"])
+        numero_transacoes = self._contar_transacoes()
 
-        if excedeu_limite:
+        if valor > self._limite:
             print("\n@@@ Operação falhou! O valor do saque excede o limite. @@@")
-
-        elif excedeu_saques:
-            print("\n@@@ Operação falhou! Número máximo de saques excedido. @@@")
-
+        elif numero_saques >= self._limite_saques and numero_transacoes >= self._limite_transacoes:
+            print("\n@@@ Operação falhou! Número máximo de saques/transferências excedido. @@@")
         else:
-            return super().sacar(valor)
+            taxa = self._taxa_transacao if numero_transacoes >= self._limite_saques else 0
+            return super().sacar(valor + taxa)
 
         return False
 
+    def transferir(self, valor, destinatario):
+        numero_transacoes = self._contar_transacoes()
+        taxa = self._taxa_transacao if numero_transacoes >= self._limite_saques else 0
+        
+        if numero_transacoes >= self._limite_transacoes:
+            print("\n@@@ Operação falhou! Número máximo de saques/transferências excedido. @@@")
+            return False
+        
+        if self.sacar(valor + taxa):
+            destinatario.depositar(valor)
+            self.historico.transacoes.append({"tipo": "Transferência", "valor": valor, "destinatario": destinatario.cliente.nome})
+            print("\n### Transferência realizada com sucesso! ###")
+            return True
+        
+        return False
+
     def __str__(self):
-        return f"""\
+        return f"""
             Agência:\t{self.agencia}
             C/C:\t\t{self.numero}
             Titular:\t{self.cliente.nome}
@@ -241,6 +255,7 @@ def log_transacao(func):
 
 def menu():
     menu = """\n
+    Seja muito bem-vindo ao International TK Bank 
     ================ MENU ================
     [d]\tDepositar
     [s]\tSacar
@@ -251,6 +266,7 @@ def menu():
     [q]\tSair
     => """
     return input(textwrap.dedent(menu))
+    #colocando boas vindas
 
 
 def filtrar_cliente(cpf, clientes):
